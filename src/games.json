@@ -1,0 +1,74 @@
+[
+  {
+    "id": "2048",
+    "title": "2048",
+    "description": "Slide matching tiles to reach the legendary 2048 block in this highly addictive puzzle game.",
+    "category": "Puzzle",
+    "iframeUrl": "https://gabrielecirulli.github.io/2048/",
+    "isFeatured": true,
+    "instructions": "Use your Arrow Keys or WASD to slide all tiles in a direction. When two tiles with the same number touch, they merge into one!"
+  },
+  {
+    "id": "snake",
+    "title": "Retro Snake",
+    "description": "The classic arcade snake game. Grow as long as possible without biting your own tail or crashing.",
+    "category": "Classic",
+    "iframeUrl": "https://tbot.github.io/snake/",
+    "isFeatured": true,
+    "instructions": "Navigate using Arrow Keys. Eat the food to grow, but do not hit the walls or yourself!"
+  },
+  {
+    "id": "hextris",
+    "title": "Hextris",
+    "description": "An intense, fast-paced fast hexagonal puzzle inspired by Tetris. Match colors to clear lines.",
+    "category": "Puzzle",
+    "iframeUrl": "https://hextris.io/",
+    "isFeatured": true,
+    "instructions": "Left/Right arrow keys rotate the hexagon. Down arrow speeds up block drop. Match three or more blocks of the same color in a line to destroy them."
+  },
+  {
+    "id": "flappy-bird",
+    "title": "Flappy Bird Classic",
+    "description": "Tap your way through the narrow gaps between green pipes. Test your timing and reflexes.",
+    "category": "Arcade",
+    "iframeUrl": "https://nebez.github.io/floppybird/",
+    "isFeatured": false,
+    "instructions": "Press Spacebar, click, or tap on mobile devices to flap your wings and gain altitude."
+  },
+  {
+    "id": "doodle-jump",
+    "title": "Doodle Jumper",
+    "description": "Bounce upwards on platforms, dodging monsters and void cracks in this endless jumping adventure.",
+    "category": "Arcade",
+    "iframeUrl": "https://sh9u.github.io/Doodle-Jump/",
+    "isFeatured": false,
+    "instructions": "Use Left and Right arrow keys to move left or right. Bounce on green tiles and shoot upwards."
+  },
+  {
+    "id": "tetris",
+    "title": "Brutal Tetris",
+    "description": "The golden standard of puzzle games. Align falling blocks to score lines in a neat, responsive retro block setup.",
+    "category": "Retro",
+    "iframeUrl": "https://chvin.github.io/react-tetris/",
+    "isFeatured": false,
+    "instructions": "Left/Right arrow keys to move. Up arrow rotates the piece. Down arrow is soft drop. Spacebar is hard drop. P pauses the game."
+  },
+  {
+    "id": "jacer",
+    "title": "JavaScript Retro Racer",
+    "description": "An outrun-style pseudo-3D retro racing simulation right in your browser. Feel the wind on classic roads.",
+    "category": "Sports & Racing",
+    "iframeUrl": "https://jakesgordon.github.io/javascript-racer/",
+    "isFeatured": true,
+    "instructions": "Use Left/Right arrow keys to steer, Up arrow to accelerate, and Down arrow to brake."
+  },
+  {
+    "id": "minesweeper",
+    "title": "Standard Minesweeper",
+    "description": "Clear a minefield without detonating a single explosive. Exercise deduction and probability grid analysis.",
+    "category": "Puzzle",
+    "iframeUrl": "https://she001.github.io/H5_Minesweeper/",
+    "isFeatured": false,
+    "instructions": "Left click a grid cell to reveal it. Right click (or long-press) to flag a cell as a potential bomb. The numbers show adjacent mine counts."
+  }
+]
