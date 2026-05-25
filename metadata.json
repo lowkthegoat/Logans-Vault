@@ -1,5 +1,5 @@
 {
-  "name": "Unblocked Games Portal",
+  "name": "Logans-Vault",
   "description": "Secure unblocked games portal featuring popular arcade and classic games.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
