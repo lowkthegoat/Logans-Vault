@@ -185,7 +185,7 @@ export default function App() {
           >
             <div className="w-6 h-6 bg-indigo-500 rounded-sm rotate-45 transition-transform group-hover:rotate-90 duration-300 shadow-[0_0_12px_rgba(99,102,241,0.3)]" />
             <span className="font-mono font-bold tracking-[0.3em] text-sm uppercase text-white hover:text-indigo-400 transition-colors">
-              Shadow.Vault
+              LOGAN'S VAULT
             </span>
           </div>
 
@@ -262,12 +262,12 @@ export default function App() {
                   GATEWAY UNLOCKED [{role === "admin" ? "SUPERPOWER" : "AJ"}]
                 </div>
                 <h1 className="text-xl sm:text-2xl font-light tracking-[0.1em] text-white uppercase font-sans">
-                  The Shadow.Vault Registry
+                  The Logan's Vault Registry
                 </h1>
                 <p className="text-xs sm:text-xs text-white/50 font-mono tracking-wide leading-relaxed max-w-2xl">
                   {role === "admin" 
-                    ? "Welcome Owner. Developer console bypass validated successfully. Complete execution rights initialized. Toggle admin instruments pool below."
-                    : "A premium secure container of bypass frames and physics layouts. Zero local dependencies or execution permissions requested."
+                    ? "Welcome Owner. Your personal unblocked games catalog is fully unlocked and ready. Add, configure, and customize your own links below."
+                    : "A secure vault for your personal arcade and web games portal."
                   }
                 </p>
 
@@ -376,12 +376,11 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Simulated Telemetry info */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-white/5 text-[10px] text-white/30">
-                  <div>SESSION_ID: <span className="text-indigo-400">ADMIN_NODE_09X</span></div>
-                  <div>RESTRICTION_LEVEL: <span className="text-indigo-400">BYPASS_PASSIVE_CLEAR</span></div>
-                  <div>FRAME_INJECTION_CAPS: <span className="text-emerald-400">SECURE_VERIFIED</span></div>
-                  <div>JSON_STORES_COUNT: <span className="text-indigo-400">{allGames.length}</span></div>
+                {/* Vault Statistics */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2 border-t border-white/5 text-[10px] text-white/30 font-mono">
+                  <div>ROLE ASSIGNED: <span className="text-indigo-400">ADMIN / OWNER</span></div>
+                  <div>SANDBOX FRAMES: <span className="text-emerald-400">ACTIVE</span></div>
+                  <div>TOTAL GAMES PERSISTED: <span className="text-indigo-400">{allGames.length}</span></div>
                 </div>
               </motion.div>
             )}
@@ -477,12 +476,12 @@ export default function App() {
         />
       )}
 
-      {/* Elegant Dark Footer Stats */}
+      {/* Elegant Dark Footer */}
       <footer className="border-t border-white/5 bg-[#050505] select-none h-16 flex items-center">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 flex items-center justify-between text-[10px] text-white/20 font-mono tracking-widest">
-          <span>ENCRYPTION: AES-256-GCM</span>
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 flex items-center justify-between text-[10px] text-white/30 font-mono tracking-widest">
+          <span>LOGAN'S VAULT</span>
           <span>ROLE: {role ? role.toUpperCase() : "UNAUTHENTICATED"}</span>
-          <span>STATUS: SECURE_ENVIRONMENT</span>
+          <span>© {new Date().getFullYear()}</span>
         </div>
       </footer>
 
