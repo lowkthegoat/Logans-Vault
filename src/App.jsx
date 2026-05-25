@@ -26,7 +26,7 @@ export default function App() {
   });
 
   const [selectedGame, setSelectedGame] = useState(null);
-  const [customGames, setCustomGames] = useState([]);
+  const [games, setGames] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -45,73 +45,84 @@ export default function App() {
     setSelectedGame(null);
   };
 
-  // Load custom user games from local storage
+  // Refresh or load games list from the server's permanent vault registry
+  const loadGamesFromServer = () => {
+    fetch("/api/games")
+      .then((res) => {
+        if (!res.ok) throw new Error("Server response state failed");
+        return res.json();
+      })
+      .then((data) => {
+        setGames(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load global vault registry. Falling back to local catalog import.", err);
+        setGames(staticGames || []);
+      });
+  };
+
   useEffect(() => {
+    if (role) {
+      loadGamesFromServer();
+    }
+  }, [role]);
+
+  // Hook Game / Save custom or uploaded HTML game
+  const handleAddCustomGame = async (input) => {
     try {
-      const stored = localStorage.getItem("custom_unblocked_games_data");
-      if (stored) {
-        setCustomGames(JSON.parse(stored));
+      const res = await fetch("/api/games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input)
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to persist game.");
       }
-    } catch (e) {
-      console.error("Could not parse saved custom cabinet codes", e);
+      // Reload registry list
+      loadGamesFromServer();
+    } catch (err) {
+      console.error("Vault update error:", err);
+      alert(err.message || "Failed to commit custom game to server database.");
     }
-  }, []);
+  };
 
-  // Save user games back to storage
-  const saveCustomGames = (updatedList) => {
-    setCustomGames(updatedList);
+  // Delete custom game handler
+  const handleDeleteGame = async (id) => {
+    if (!window.confirm("UNLINK CORE PROTOCOL: Are you sure you want to remove this game from the permanent portal?")) {
+      return;
+    }
     try {
-      localStorage.setItem("custom_unblocked_games_data", JSON.stringify(updatedList));
-    } catch (e) {
-      console.error("Failure storing custom cabinet code changes", e);
+      const res = await fetch(`/api/games/${id}`, {
+        method: "DELETE"
+      });
+      if (!res.ok) {
+        throw new Error("Failed to delete game from backend.");
+      }
+      setGames((prev) => prev.filter((g) => g.id !== id));
+      if (selectedGame?.id === id) {
+        setSelectedGame(null);
+      }
+    } catch (err) {
+      console.error("Failed to delete game:", err);
+      alert("Error: Failed to unlink game source from main server.");
     }
   };
 
-  // Add custom game handler
-  const handleAddCustomGame = (input) => {
-    const newGame = {
-      ...input,
-      id: `custom-${Date.now()}`,
-      isCustom: true
-    };
-    const updated = [newGame, ...customGames];
-    saveCustomGames(updated);
-  };
-
-  // Delete custom game handler (Admin can delete BOTH custom and preset games!)
-  const handleDeleteGame = (id) => {
-    // If custom, delete from custom list
-    if (customGames.some(g => g.id === id)) {
-      const filtered = customGames.filter((g) => g.id !== id);
-      saveCustomGames(filtered);
-    } else if (role === "admin") {
-      // If default game, we can hide/block it! Store hidden list in localStorage
+  // Restore factory settings: clear all custom games
+  const handleRestoreDefaults = async () => {
+    if (window.confirm("Developer Override: Clear all custom registry changes & restore defaults?")) {
       try {
-        const hiddenStored = localStorage.getItem("hidden_default_games") || "[]";
-        const hiddenList = JSON.parse(hiddenStored);
-        if (!hiddenList.includes(id)) {
-          hiddenList.push(id);
-          localStorage.setItem("hidden_default_games", JSON.stringify(hiddenList));
-          // Force active state refresh
-          setCustomGames([...customGames]); // Simple trigger
+        for (const game of games) {
+          if (game.isCustom) {
+            await fetch(`/api/games/${game.id}`, { method: "DELETE" });
+          }
         }
-      } catch (e) {
-        console.error("Error hiding default game", e);
+        loadGamesFromServer();
+        setSelectedGame(null);
+      } catch (err) {
+        console.error("Reset error:", err);
       }
-    }
-
-    if (selectedGame?.id === id) {
-      setSelectedGame(null);
-    }
-  };
-
-  // Restore factory settings: clear all custom games AND restore deleted default ones
-  const handleRestoreDefaults = () => {
-    if (window.confirm("Developer Override: Clear registry changes & restore defaults?")) {
-      localStorage.removeItem("custom_unblocked_games_data");
-      localStorage.removeItem("hidden_default_games");
-      setCustomGames([]);
-      setSelectedGame(null);
     }
   };
 
@@ -126,17 +137,8 @@ export default function App() {
     });
   };
 
-  // Combine static predefined JSON catalog and custom user games
-  const allGames = useMemo(() => {
-    let hiddenList = [];
-    try {
-      const hiddenStored = localStorage.getItem("hidden_default_games");
-      if (hiddenStored) hiddenList = JSON.parse(hiddenStored);
-    } catch (e) {}
-
-    const presets = staticGames.filter(g => !hiddenList.includes(g.id));
-    return [...customGames, ...presets];
-  }, [customGames]);
+  // Map games list as allGames selector to minimize downstream component adjustments
+  const allGames = games;
 
   // Derive unique categories from available items
   const categories = useMemo(() => {
