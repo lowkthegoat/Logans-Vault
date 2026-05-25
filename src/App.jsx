@@ -31,6 +31,7 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showDevControls, setShowDevControls] = useState(false);
+  const [isServerOnline, setIsServerOnline] = useState(false);
 
   // Sync session storage on unlock
   const handleUnlock = (assignedRole) => {
@@ -43,6 +44,71 @@ export default function App() {
     sessionStorage.removeItem("arcade_unlocked_role");
     setRole(null);
     setSelectedGame(null);
+  };
+
+  // Export database as games_backup.json
+  const handleExportDatabase = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(games, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "logan_vault_games.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } catch (e) {
+      console.error("Export failed", e);
+      alert("Failed to export games list: browser limit reached");
+    }
+  };
+
+  // Import games list from JSON file or restore
+  const handleImportDatabase = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const imported = JSON.parse(e.target?.result);
+          if (Array.isArray(imported)) {
+            if (window.confirm(`Found ${imported.length} games. Merge them into this device's registry?`)) {
+              let storedCustom = [];
+              try {
+                const stored = localStorage.getItem("custom_unblocked_games_data");
+                if (stored) {
+                  storedCustom = JSON.parse(stored);
+                }
+              } catch (_) {}
+
+              const existingIds = new Set(storedCustom.map(g => g.id));
+              const newCustom = imported.filter(g => g.isCustom && !existingIds.has(g.id));
+              
+              const merged = [...newCustom, ...storedCustom];
+              localStorage.setItem("custom_unblocked_games_data", JSON.stringify(merged));
+
+              // If online server, also upload them to server
+              if (isServerOnline) {
+                for (const g of newCustom) {
+                  await fetch("/api/games", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(g)
+                  }).catch(() => {});
+                }
+              }
+
+              loadGamesFromServer();
+              alert(`PORTAL RECORD MERGED: Imported ${newCustom.length} new custom titles successfully!`);
+            }
+          } else {
+            alert("Format mismatch: The selected file does not represent a valid list array.");
+          }
+        } catch (err) {
+          alert("Import failed: JSON file is invalid or corrupted.");
+        }
+      };
+      reader.readAsText(file);
+    }
   };
 
   // Refresh or load games list from the server's permanent vault registry
@@ -58,8 +124,10 @@ export default function App() {
       })
       .then((data) => {
         setGames(data);
+        setIsServerOnline(true);
       })
       .catch((err) => {
+        setIsServerOnline(false);
         console.warn("Global vault registry not found, matching static + local storage database.", err);
         let storedCustom = [];
         try {
@@ -384,13 +452,15 @@ export default function App() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Registry Controls */}
-                  <div className="p-4 bg-black/40 border border-white/5 rounded space-y-3">
-                    <span className="text-white/60 font-semibold uppercase text-[10px] tracking-wider block border-b border-white/5 pb-1">
-                      REGISTRY PROTOCOLS
-                    </span>
-                    <p className="text-[11px] text-white/40">
-                      Wipe the local client-side memory to recreate original catalog file assets.
-                    </p>
+                  <div className="p-4 bg-black/40 border border-white/5 rounded space-y-3 flex flex-col justify-between">
+                    <div>
+                      <span className="text-white/60 font-semibold uppercase text-[10px] tracking-wider block border-b border-white/5 pb-1">
+                        REGISTRY PROTOCOLS
+                      </span>
+                      <p className="text-[11px] text-white/40 mt-1">
+                        Reset the local browser database to delete cached games & restore defaults.
+                      </p>
+                    </div>
                     <button
                       onClick={handleRestoreDefaults}
                       className="w-full py-2 bg-red-950/20 hover:bg-red-950 border border-red-900 text-[10px] text-red-400 hover:text-white uppercase tracking-wider rounded transition-colors cursor-pointer flex items-center justify-center gap-1.5"
@@ -400,12 +470,54 @@ export default function App() {
                     </button>
                   </div>
 
-                  {/* Built-in quick loaders */}
-                  <div className="p-4 bg-black/40 border border-white/5 rounded space-y-3 col-span-2">
+                  {/* Portable Backup & Database Sync */}
+                  <div className="p-4 bg-black/40 border border-white/5 rounded space-y-3">
                     <span className="text-white/60 font-semibold uppercase text-[10px] tracking-wider block border-b border-white/5 pb-1">
-                      QUICK LOAD SANDBOX TARGETS (TESTING FRAMEWORKS)
+                      CROSS-DEVICE SYNC & BACKUP
                     </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    
+                    {/* Database Active Mode Indicator */}
+                    <div className="p-2 rounded bg-[#0a0a0a] border border-white/5 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${isServerOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                        <span className="text-[10px] font-bold tracking-wider text-white uppercase">
+                          {isServerOnline ? "LIVE SERVER STORAGE" : "STATIC BROWSER STORAGE"}
+                        </span>
+                      </div>
+                      <p className="text-[9px] text-white/30 leading-normal">
+                        {isServerOnline 
+                          ? "Stored permanently on the Cloud backend file system. Available to all other devices seamlessly."
+                          : "Running on a static host (like GitHub Pages). Hooked games are saved locally on this browser's cache."
+                        }
+                      </p>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="space-y-1.5 pt-1">
+                      <button
+                        onClick={handleExportDatabase}
+                        className="w-full py-1.5 bg-[#1a1a1a] hover:bg-neutral-800 border border-white/10 text-[9px] text-[#e0e0e0] uppercase tracking-wider rounded transition-colors cursor-pointer flex items-center justify-center gap-1"
+                      >
+                        📥 Export Games List (.json)
+                      </button>
+                      <label className="w-full py-1.5 bg-[#1a1a1a] hover:bg-neutral-800 border border-white/10 text-[9px] text-[#e0e0e0] uppercase tracking-wider rounded transition-colors cursor-pointer flex items-center justify-center gap-1 text-center">
+                        📤 Import Backup List
+                        <input
+                          type="file"
+                          accept=".json"
+                          onChange={handleImportDatabase}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Built-in quick loaders */}
+                  <div className="p-4 bg-black/40 border border-white/5 rounded space-y-3">
+                    <span className="text-white/60 font-semibold uppercase text-[10px] tracking-wider block border-b border-white/5 pb-1">
+                      SANDBOX PRESETS
+                    </span>
+                    <div className="grid grid-cols-1 gap-1.5 max-h-[145px] overflow-y-auto custom-scrollbar">
                       <button
                         onClick={() => handleLoadPreset(
                           "https://bellard.org/jslinux/",
@@ -413,7 +525,7 @@ export default function App() {
                           "Sandbox",
                           "Full Linux emulator inside canvas created by Fabrice Bellard. Direct x86 stack parsing."
                         )}
-                        className="p-2 text-[10px] text-indigo-300 hover:text-white bg-indigo-950/10 hover:bg-indigo-950/40 border border-indigo-900/30 hover:border-indigo-800 rounded transition-all text-left truncate"
+                        className="p-1 px-2 text-[9px] text-indigo-300 hover:text-white bg-indigo-950/10 hover:bg-indigo-950/40 border border-indigo-900/30 hover:border-indigo-800 rounded transition-all text-left truncate"
                       >
                         ⚡ Mount V8 Linux Terminal
                       </button>
@@ -424,7 +536,7 @@ export default function App() {
                           "Retro",
                           "Classic Doom DOS emulator loading within shadow iframe structures."
                         )}
-                        className="p-2 text-[10px] text-indigo-300 hover:text-white bg-indigo-950/10 hover:bg-indigo-950/40 border border-indigo-900/30 hover:border-indigo-800 rounded transition-all text-left truncate"
+                        className="p-1 px-2 text-[9px] text-indigo-300 hover:text-white bg-indigo-950/10 hover:bg-indigo-950/40 border border-indigo-900/30 hover:border-indigo-800 rounded transition-all text-left truncate"
                       >
                         ⚡ Mount Doom MS-DOS Emulator
                       </button>
@@ -435,9 +547,9 @@ export default function App() {
                           "Classic",
                           "Traditional 1989 platformer running in a simulated PC DOS frame environment."
                         )}
-                        className="p-2 text-[10px] text-indigo-300 hover:text-white bg-indigo-950/10 hover:bg-indigo-950/40 border border-indigo-900/30 hover:border-indigo-800 rounded transition-all text-left truncate"
+                        className="p-1 px-2 text-[9px] text-indigo-300 hover:text-white bg-indigo-950/10 hover:bg-indigo-950/40 border border-indigo-900/30 hover:border-indigo-800 rounded transition-all text-left truncate"
                       >
-                        ⚡ Mount Prince of Persia
+                        ⚡ Prince of Persia
                       </button>
                       <button
                         onClick={() => handleLoadPreset(
@@ -446,9 +558,9 @@ export default function App() {
                           "Arcade",
                           "Pre-configured reference arcade cabinet hosted on archive.org"
                         )}
-                        className="p-2 text-[10px] text-indigo-300 hover:text-white bg-indigo-950/10 hover:bg-indigo-950/40 border border-indigo-900/30 hover:border-indigo-800 rounded transition-all text-left truncate"
+                        className="p-1 px-2 text-[9px] text-indigo-300 hover:text-white bg-indigo-950/10 hover:bg-indigo-950/40 border border-indigo-900/30 hover:border-indigo-800 rounded transition-all text-left truncate"
                       >
-                        ⚡ Mount Pac-Man (Archive Preset)
+                        ⚡ Pac-Man Classic Cab
                       </button>
                     </div>
                   </div>
@@ -457,7 +569,7 @@ export default function App() {
                 {/* Vault Statistics */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-2 border-t border-white/5 text-[10px] text-white/30 font-mono">
                   <div>ROLE ASSIGNED: <span className="text-indigo-400">ADMIN / OWNER</span></div>
-                  <div>SANDBOX FRAMES: <span className="text-emerald-400">ACTIVE</span></div>
+                  <div>DATABASE ENGINE: <span className={isServerOnline ? "text-emerald-400" : "text-amber-400 animate-pulse"}>{isServerOnline ? "ONLINE (RUNNING)" : "LOCAL ONLY (STATIC)"}</span></div>
                   <div>TOTAL GAMES PERSISTED: <span className="text-indigo-400">{allGames.length}</span></div>
                 </div>
               </motion.div>

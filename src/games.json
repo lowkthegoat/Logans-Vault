@@ -1,1 +1,46 @@
-[]
+[
+  {
+    "id": "builtin-2048",
+    "title": "2048",
+    "description": "The addictive sliding tile puzzle game. Join the numbers and get to the 2048 tile!",
+    "category": "Puzzle",
+    "instructions": "Use your Arrow keys or swipe gestures to move the tiles. When two tiles with the same number touch, they merge into one!",
+    "iframeUrl": "https://play2048.co/",
+    "isCustom": false,
+    "hasLocalHtml": false,
+    "createdAt": "2026-05-25T12:00:00.000Z"
+  },
+  {
+    "id": "builtin-pacman",
+    "title": "Retro Pac-Man Cabinet",
+    "description": "Original arcade cabinet implementation of the legendary pellet-munching maze game.",
+    "category": "Arcade",
+    "instructions": "Click inside the arcade frame to click Start, then use your Arrow Keys to guide Pacman away from the colorful ghosts.",
+    "iframeUrl": "https://archive.org/embed/arcade_pacman",
+    "isCustom": false,
+    "hasLocalHtml": false,
+    "createdAt": "2026-05-25T12:01:00.000Z"
+  },
+  {
+    "id": "builtin-space-invaders",
+    "title": "Space Invaders",
+    "description": "The classic fixed shooter vintage game. Defense Earth from rows of invading alien forces.",
+    "category": "Arcade",
+    "instructions": "Use Left and Right Arrow keys or cursor drag to steer. Press Spacebar to fire your lasers.",
+    "iframeUrl": "https://freeinvaders.org/",
+    "isCustom": false,
+    "hasLocalHtml": false,
+    "createdAt": "2026-05-25T12:02:00.000Z"
+  },
+  {
+    "id": "builtin-v8-linux",
+    "title": "Sandbox Linux Console",
+    "description": "Complete terminal environment running a virtualized x86 emulator with live networking inside the browser.",
+    "category": "Sandbox",
+    "instructions": "Wait for the boot sequence to complete, then type standard Linux CLI shell inputs (such as cat, ls, top, or cal) to execute.",
+    "iframeUrl": "https://bellard.org/jslinux/",
+    "isCustom": false,
+    "hasLocalHtml": false,
+    "createdAt": "2026-05-25T12:03:00.000Z"
+  }
+]
