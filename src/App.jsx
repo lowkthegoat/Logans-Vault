@@ -111,6 +111,88 @@ export default function App() {
     }
   };
 
+  // Auto-sync client-side custom games to the permanent server registry if they don't exist yet
+  const syncLocalGamesToServer = async (localGames, serverGames) => {
+    const serverTitles = new Set(serverGames.map(g => g.title.toLowerCase().trim()));
+    const gamesToSync = localGames.filter(g => g.isCustom && !serverTitles.has(g.title.toLowerCase().trim()));
+    
+    if (gamesToSync.length === 0) return;
+    
+    let successCount = 0;
+    for (const game of gamesToSync) {
+      try {
+        let htmlContent = undefined;
+        let iframeUrl = game.iframeUrl;
+        
+        // If it was stored locally as a data base64 string, unpack it back to htmlContent so the server saves it cleanly!
+        if (game.iframeUrl && game.iframeUrl.startsWith("data:text/html;base64,")) {
+          try {
+            const base64Data = game.iframeUrl.split("data:text/html;base64,")[1];
+            htmlContent = decodeURIComponent(escape(atob(base64Data)));
+            iframeUrl = undefined;
+          } catch (e) {
+            console.error("Decoding base64 HTML for server sync failed", e);
+          }
+        }
+        
+        const response = await fetch("/api/games", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: game.title,
+            description: game.description,
+            category: game.category,
+            instructions: game.instructions,
+            iframeUrl: iframeUrl,
+            htmlContent: htmlContent
+          })
+        });
+        
+        if (response.ok) {
+          successCount++;
+        }
+      } catch (err) {
+        console.error("Failed to auto-sync local game:", game.title, err);
+      }
+    }
+    
+    if (successCount > 0) {
+      // Clean up synced items from local storage to avoid re-upload attempts
+      let storedCustom = [];
+      try {
+        const stored = localStorage.getItem("custom_unblocked_games_data");
+        if (stored) {
+          storedCustom = JSON.parse(stored);
+        }
+      } catch (_) {}
+      
+      const updatedLocal = storedCustom.filter(g => {
+        const serverTitlesNow = new Set(serverGames.map(x => x.title.toLowerCase().trim()));
+        const isAlreadySynced = serverTitlesNow.has(g.title.toLowerCase().trim());
+        return !isAlreadySynced;
+      });
+      
+      if (updatedLocal.length === 0) {
+        localStorage.removeItem("custom_unblocked_games_data");
+      } else {
+        localStorage.setItem("custom_unblocked_games_data", JSON.stringify(updatedLocal));
+      }
+      
+      // Perform a final reload to ensure UI matches the shiny backend database
+      fetch("/api/games")
+        .then((res) => {
+          if (res.ok) return res.json();
+          throw new Error();
+        })
+        .then((data) => {
+          setGames(data);
+        })
+        .catch(() => {});
+        
+      alert(`CLOUD SYNC COMPLETED: Successfully migrated ${successCount} custom game(s) from your device cache to the permanent portal registry! Any other device can now play them seamlessly.`);
+    }
+  };
+
   // Refresh or load games list from the server's permanent vault registry
   const loadGamesFromServer = () => {
     fetch("/api/games")
@@ -125,6 +207,19 @@ export default function App() {
       .then((data) => {
         setGames(data);
         setIsServerOnline(true);
+        
+        // Auto-sync user's device cache games to the live database when connected
+        try {
+          const stored = localStorage.getItem("custom_unblocked_games_data");
+          if (stored) {
+            const storedCustom = JSON.parse(stored);
+            if (storedCustom && storedCustom.length > 0) {
+              syncLocalGamesToServer(storedCustom, data);
+            }
+          }
+        } catch (e) {
+          console.warn("Auto-sync trigger skipped", e);
+        }
       })
       .catch((err) => {
         setIsServerOnline(false);
