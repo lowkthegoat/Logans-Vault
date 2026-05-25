@@ -215,17 +215,6 @@ export default function App() {
             >
               <Lock className="w-3.5 h-3.5" />
             </button>
-
-            <div 
-              title={role === "admin" ? "Role: Owner / SuperPower" : "Role: Player / Applejack"}
-              className={`w-8 h-8 rounded-full border flex items-center justify-center text-[10px] font-mono select-none px-1.5 ${
-                role === "admin" 
-                  ? "bg-amber-950/40 border-amber-500/40 text-amber-400 font-bold shadow-[0_0_8px_rgba(245,158,11,0.2)]" 
-                  : "bg-white/5 border-white/10 text-white/80"
-              }`}
-            >
-              {role === "admin" ? "SP" : "AJ"}
-            </div>
           </div>
 
         </div>
@@ -259,7 +248,7 @@ export default function App() {
               <div className="max-w-3xl text-left space-y-3 relative z-10">
                 <div className="inline-flex items-center gap-2 px-2.5 py-0.5 text-[9px] font-mono text-indigo-400 bg-indigo-950/20 border border-indigo-900/30 uppercase tracking-widest rounded-sm">
                   <Sparkles className="w-3 h-3 text-indigo-400" />
-                  GATEWAY UNLOCKED [{role === "admin" ? "SUPERPOWER" : "AJ"}]
+                  GATEWAY UNLOCKED
                 </div>
                 <h1 className="text-xl sm:text-2xl font-light tracking-[0.1em] text-white uppercase font-sans">
                   The Logan's Vault Registry
