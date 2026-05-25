@@ -1,5 +1,27 @@
 [
   {
+    "id": "builtin-cookie-clicker",
+    "title": "Cookie Clicker",
+    "description": "The legendary clicking game. Click the giant cookie, hire grandma baking empires, and purchase endless sweet upgrades!",
+    "category": "Arcade",
+    "instructions": "Click the giant cookie on the left as fast as you can. Use your cookies to purchase grandmas, farms, and factories on the right side of the screen to automate your baking!",
+    "iframeUrl": "https://cookieclickers.io/the-game/",
+    "isCustom": false,
+    "hasLocalHtml": false,
+    "createdAt": "2026-05-25T12:55:00.000Z"
+  },
+  {
+    "id": "builtin-doom",
+    "title": "Doom (MS-DOS)",
+    "description": "The legendary 1993 demon-slaying shooter running directly inside a vintage DOSBox console wrapper.",
+    "category": "Retro",
+    "instructions": "Click inside the console frame to capture your cursor. Use your Arrow keys to move, Control to fire weapons, Alt to strafe, and Space to open doors.",
+    "iframeUrl": "https://classicreload.com/dosbox-java-applet-doom-classic.html",
+    "isCustom": false,
+    "hasLocalHtml": false,
+    "createdAt": "2026-05-25T12:50:00.000Z"
+  },
+  {
     "id": "builtin-2048",
     "title": "2048",
     "description": "The addictive sliding tile puzzle game. Join the numbers and get to the 2048 tile!",
@@ -15,7 +37,7 @@
     "title": "Retro Pac-Man Cabinet",
     "description": "Original arcade cabinet implementation of the legendary pellet-munching maze game.",
     "category": "Arcade",
-    "instructions": "Click inside the arcade frame to click Start, then use your Arrow Keys to guide Pacman away from the colorful ghosts.",
+    "instructions": "Click inside the arcade frame to click Start, then use your Arrow Keys to guide Pac-Man away from the colorful ghosts.",
     "iframeUrl": "https://archive.org/embed/arcade_pacman",
     "isCustom": false,
     "hasLocalHtml": false,
@@ -24,7 +46,7 @@
   {
     "id": "builtin-space-invaders",
     "title": "Space Invaders",
-    "description": "The classic fixed shooter vintage game. Defense Earth from rows of invading alien forces.",
+    "description": "The classic fixed shooter vintage game. Defend Earth from rows of invading alien forces.",
     "category": "Arcade",
     "instructions": "Use Left and Right Arrow keys or cursor drag to steer. Press Spacebar to fire your lasers.",
     "iframeUrl": "https://freeinvaders.org/",
