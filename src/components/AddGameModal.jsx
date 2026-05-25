@@ -112,14 +112,14 @@ export default function AddGameModal({ isOpen, onClose, onAdd }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ type: "tween", duration: 0.3 }}
-            className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded overflow-hidden z-10 m-auto shadow-2xl"
+            className="relative w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded overflow-hidden z-10 m-auto shadow-2xl max-h-[90vh] flex flex-col"
             id="add-game-modal-body"
           >
             {/* Ambient indicator top line */}
-            <div className="h-[2px] bg-indigo-500 w-full" />
+            <div className="h-[2px] bg-indigo-500 w-full shrink-0" />
 
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-8 py-5 border-b border-white/5 bg-[#080808]">
+            <div className="flex items-center justify-between px-8 py-5 border-b border-white/5 bg-[#080808] shrink-0">
               <div className="flex items-center gap-2">
                 <Terminal className="w-4 h-4 text-indigo-400" />
                 <h2 className="text-xs font-mono tracking-widest text-white uppercase select-none">
@@ -136,7 +136,7 @@ export default function AddGameModal({ isOpen, onClose, onAdd }) {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="p-8 space-y-5">
+            <form onSubmit={handleSubmit} className="p-8 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
               <div className="space-y-1.5">
                 <label className="block text-[10px] font-mono text-white/40 uppercase tracking-widest">
                   Game Title *
