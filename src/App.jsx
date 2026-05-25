@@ -50,14 +50,27 @@ export default function App() {
     fetch("/api/games")
       .then((res) => {
         if (!res.ok) throw new Error("Server response state failed");
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Static fallback mode");
+        }
         return res.json();
       })
       .then((data) => {
         setGames(data);
       })
       .catch((err) => {
-        console.error("Failed to load global vault registry. Falling back to local catalog import.", err);
-        setGames(staticGames || []);
+        console.warn("Global vault registry not found, matching static + local storage database.", err);
+        let storedCustom = [];
+        try {
+          const stored = localStorage.getItem("custom_unblocked_games_data");
+          if (stored) {
+            storedCustom = JSON.parse(stored);
+          }
+        } catch (e) {
+          console.error("Local storage read failure:", e);
+        }
+        setGames([...storedCustom, ...staticGames]);
       });
   };
 
@@ -70,59 +83,133 @@ export default function App() {
   // Hook Game / Save custom or uploaded HTML game
   const handleAddCustomGame = async (input) => {
     try {
+      // 1. Try to POST to the Express backend server
       const res = await fetch("/api/games", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input)
       });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to persist game.");
+      
+      const contentType = res.headers.get("content-type");
+      if (res.ok && contentType && contentType.includes("application/json")) {
+        // Success on global backend server. Reload register!
+        loadGamesFromServer();
+        return;
       }
-      // Reload registry list
-      loadGamesFromServer();
+      
+      // If server responded but didn't return json (like 404 HTML block page or static host fallback)
+      throw new Error("Server API offline or running in Static Hosting Mode.");
     } catch (err) {
-      console.error("Vault update error:", err);
-      alert(err.message || "Failed to commit custom game to server database.");
+      console.warn("Vault API offline or running on static hosting. Defaulting custom game to local web storage database.", err);
+      
+      // 2. Static Hosting Fallback: Save directly to local storage!
+      try {
+        const gameId = `custom-local-${Date.now()}`;
+        let finalIframeUrl = input.iframeUrl;
+        
+        // If they chose custom HTML upload option
+        if (input.htmlContent) {
+          // Convert HTML directly into an eye-safe inline base64 encoded document to preserve all javascript
+          const base64Html = btoa(unescape(encodeURIComponent(input.htmlContent)));
+          finalIframeUrl = `data:text/html;base64,${base64Html}`;
+        }
+        
+        const newGame = {
+          id: gameId,
+          title: input.title.trim(),
+          description: input.description.trim(),
+          category: input.category,
+          instructions: input.instructions || '',
+          iframeUrl: finalIframeUrl,
+          isCustom: true,
+          hasLocalHtml: !!input.htmlContent,
+          createdAt: new Date().toISOString()
+        };
+        
+        let storedCustom = [];
+        try {
+          const stored = localStorage.getItem("custom_unblocked_games_data");
+          if (stored) {
+            storedCustom = JSON.parse(stored);
+          }
+        } catch (_) {}
+        
+        const updated = [newGame, ...storedCustom];
+        localStorage.setItem("custom_unblocked_games_data", JSON.stringify(updated));
+        
+        // Reload local list
+        loadGamesFromServer();
+        alert(`PORTAL REGISTERED: "${input.title}" added to browser cache. Available across tabs!`);
+      } catch (localErr) {
+        console.error("Local storage write failure:", localErr);
+        alert("Persistence Failure: Browser local database limit reached.");
+      }
     }
   };
 
   // Delete custom game handler
   const handleDeleteGame = async (id) => {
-    if (!window.confirm("UNLINK CORE PROTOCOL: Are you sure you want to remove this game from the permanent portal?")) {
+    if (!window.confirm("UNLINK CORE PROTOCOL: Are you sure you want to remove this game?")) {
       return;
     }
+    
+    let deletedLocally = false;
+    try {
+      let storedCustom = [];
+      const stored = localStorage.getItem("custom_unblocked_games_data");
+      if (stored) {
+        storedCustom = JSON.parse(stored);
+      }
+      if (storedCustom.some(g => g.id === id)) {
+        storedCustom = storedCustom.filter(g => g.id !== id);
+        localStorage.setItem("custom_unblocked_games_data", JSON.stringify(storedCustom));
+        deletedLocally = true;
+      }
+    } catch (e) {
+      console.error("Local delete error", e);
+    }
+
     try {
       const res = await fetch(`/api/games/${id}`, {
         method: "DELETE"
       });
-      if (!res.ok) {
-        throw new Error("Failed to delete game from backend.");
+      const contentType = res.headers.get("content-type");
+      if (res.ok && contentType && contentType.includes("application/json")) {
+        loadGamesFromServer();
+        if (selectedGame?.id === id) {
+          setSelectedGame(null);
+        }
+        return;
       }
-      setGames((prev) => prev.filter((g) => g.id !== id));
+    } catch (err) {
+      console.warn("Delete endpoint unavailable in static hosting.", err);
+    }
+    
+    if (deletedLocally) {
+      loadGamesFromServer();
       if (selectedGame?.id === id) {
         setSelectedGame(null);
       }
-    } catch (err) {
-      console.error("Failed to delete game:", err);
-      alert("Error: Failed to unlink game source from main server.");
+    } else {
+      alert("Error: Failed to unlink game source.");
     }
   };
 
   // Restore factory settings: clear all custom games
   const handleRestoreDefaults = async () => {
     if (window.confirm("Developer Override: Clear all custom registry changes & restore defaults?")) {
+      localStorage.removeItem("custom_unblocked_games_data");
       try {
         for (const game of games) {
-          if (game.isCustom) {
-            await fetch(`/api/games/${game.id}`, { method: "DELETE" });
+          if (game.isCustom && !game.id.startsWith("custom-local-")) {
+            await fetch(`/api/games/${game.id}`, { method: "DELETE" }).catch(() => {});
           }
         }
-        loadGamesFromServer();
-        setSelectedGame(null);
       } catch (err) {
-        console.error("Reset error:", err);
+        console.warn("Error releasing backend database:", err);
       }
+      loadGamesFromServer();
+      setSelectedGame(null);
     }
   };
 
